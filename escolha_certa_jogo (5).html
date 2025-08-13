@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escolha Certa - Jogo de Decisão Complexo</title>
+<style>
+    body {
+        margin: 0;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
+    }
+    .container {
+        width: 90%;
+        max-width: 700px;
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 4px solid #FF69B4;
+        background-color: #fff8dc;
+        position: relative;
+    }
+    h1 { font-size: 2rem; color: #FF1493; margin-bottom: 10px; }
+    p { font-size: 1.1rem; color: #333; }
+    button {
+        display: block;
+        margin: 12px auto;
+        padding: 14px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 90%;
+        max-width: 500px;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        color: #333;
+    }
+    button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    }
+    .op1 { background-color: #FFC0CB; }
+    .op2 { background-color: #FFB6C1; }
+    .op3 { background-color: #FF69B4; }
+    .op4 { background-color: #FF1493; color: white; }
+    .progress-bar {
+        width: 100%;
+        background-color: #ddd;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        height: 20px;
+    }
+    .progress { height: 100%; width: 0%; background-color: #FF69B4; transition: width 0.3s; }
+    .timer { position: absolute; top: 10px; right: 20px; font-weight: bold; color: #FF4500; font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<div id="game" class="container">
+    <div class="progress-bar"><div id="progress" class="progress"></div></div>
+    <div class="timer" id="timer">15s</div>
+    <h1 id="titulo"></h1>
+    <p id="descricao"></p>
+    <div id="opcoes"></div>
+</div>
+<script>
+const situacoes = [
+    { titulo: "Crise Hídrica Avançada 💧", descricao: "O reservatório caiu para 5%. Como priorizar o uso da água considerando impacto social e ambiental?", opcoes: [ {texto: "Racionar água apenas para residências", r: 2, i: 3}, {texto: "Distribuir igualmente entre todos setores", r: 0, i: 5}, {texto: "Racionamento com prioridade para consumo essencial", r: 5, i: 0}, {texto: "Incentivar empresas a reduzir consumo", r: 3, i: 1} ] },
+    { titulo: "Expansão Industrial 🏭", descricao: "Fábrica quer expandir. Como minimizar poluição e promover desenvolvimento?", opcoes: [ {texto: "Aceitar expansão sem restrições", r: 0, i: 5}, {texto: "Investimento em tecnologias limpas e compensações", r: 5, i: 0}, {texto: "Proibir expansão sem alternativas de emprego", r: 2, i: 3}, {texto: "Permitir expansão parcial com monitoramento", r: 4, i: 1} ] },
+    { titulo: "Planejamento Urbano 🌆", descricao: "Como desenvolver bairro equilibrando moradia, mobilidade e áreas verdes?", opcoes: [ {texto: "Construir apenas prédios de alto lucro", r: 0, i: 5}, {texto: "Planejar habitação sustentável, parques e transporte", r: 5, i: 0}, {texto: "Priorizar transporte público sem áreas verdes", r: 2, i: 3}, {texto: "Misturar zonas residenciais e comerciais sem planejamento", r: 1, i: 4} ] },
+    { titulo: "Gestão de Lixo Eletrônico ♻️", descricao: "Como reduzir impacto ambiental de resíduos tecnológicos?", opcoes: [ {texto: "Exportar para países sem regulamentação", r: 0, i: 5}, {texto: "Criar programa local de coleta e reciclagem", r: 5, i: 0}, {texto: "Queimar parcialmente para economizar espaço", r: 1, i: 4}, {texto: "Transformar resíduos em produtos reciclados", r: 4, i: 1} ] },
+    { titulo: "Matriz Energética ⚡", descricao: "Escolha política energética balanceando custo e sustentabilidade.", opcoes: [ {texto: "Manter só fontes fósseis", r: 0, i: 5}, {texto: "Implementar mix de solar, eólica e pequenas hidrelétricas", r: 5, i: 0}, {texto: "Apostar em energia nuclear sem estudo", r: 2, i: 3}, {texto: "Investir em eficiência energética e incentivos", r: 4, i: 1} ] },
+    { titulo: "Educação Ambiental 📚", descricao: "Qual abordagem garante mudança de comportamento na escola?", opcoes: [ {texto: "Distribuir material educativo sem acompanhamento", r: 1, i: 4}, {texto: "Currículo integrado e projetos práticos", r: 5, i: 0}, {texto: "Palestras ocasionais", r: 2, i: 3}, {texto: "Workshops extracurriculares com incentivo", r: 4, i: 1} ] },
+    { titulo: "Transporte Sustentável 🚍", descricao: "Como reduzir poluição e congestionamento com orçamento limitado?", opcoes: [ {texto: "Aumentar ruas para carros", r: 0, i: 5}, {texto: "Transporte público eficiente e ciclovias", r: 5, i: 0}, {texto: "Expandir transporte público sem integração", r: 2, i: 3}, {texto: "Sistema de caronas e transporte comunitário", r: 4, i: 1} ] },
+    { titulo: "Biodiversidade 🐾", descricao: "Como proteger espécies ameaçadas equilibrando economia local?", opcoes: [ {texto: "Permitir exploração sem restrições", r: 0, i: 5}, {texto: "Criar reservas com fiscalização e turismo sustentável", r: 5, i: 0}, {texto: "Áreas protegidas sem fiscalização", r: 2, i: 3}, {texto: "Parcerias comunitárias para manejo sustentável", r: 4, i: 1} ] },
+    { titulo: "Agricultura Sustentável 🌾", descricao: "Como maximizar produção sem degradar solo, água e biodiversidade?", opcoes: [ {texto: "Uso intensivo de agrotóxicos e irrigação excessiva", r: 0, i: 5}, {texto: "Rotação de culturas e manejo integrado de pragas", r: 5, i: 0}, {texto: "Práticas sustentáveis apenas em parte da propriedade", r: 2, i: 3}, {texto: "Técnicas de agricultura regenerativa e orgânica", r: 4, i: 1} ] },
+    { titulo: "Gestão de Desastres 🌪️", descricao: "Após desastre, como priorizar ajuda e reconstrução justa?", opcoes: [ {texto: "Reconstruir rápido sem planejamento", r: 1, i: 5}, {texto: "Planos de emergência e participação da comunidade", r: 5, i: 0}, {texto: "Distribuir apenas auxílio financeiro", r: 2, i: 3}, {texto: "Voluntariado e treinamento técnico", r: 4, i: 1} ] }
+];
+
+let rodada = 0;
+let resp = 0;
+let impacto = 0;
+let tempo = 15;
+let timerInterval;
+
+function atualizarTimer() {
+    document.getElementById('timer').innerText = tempo + 's';
+    tempo--;
+    if (tempo < 0) {
+        clearInterval(timerInterval);
+        proximaPergunta({r:0,i:1});
+    }
+}
+
+function mostrarSituacao() {
+    if (rodada >= situacoes.length) {
+        mostrarResultado();
+        return;
+    }
+    tempo = 15;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(atualizarTimer, 1000);
+
+    const s = situacoes[rodada];
+    document.getElementById('titulo').innerText = s.titulo;
+    document.getElementById('descricao').innerText = s.descricao;
+    const opcoesDiv = document.getElementById('opcoes');
+    opcoesDiv.innerHTML = "";
+
+    s.opcoes.forEach((op, idx) => {
+        const btn = document.createElement('button');
+        btn.innerText = op.texto;
+        btn.classList.add(`op${idx+1}`);
+        btn.onclick = () => {
+            clearInterval(timerInterval);
+            proximaPergunta(op);
+        };
+        opcoesDiv.appendChild(btn);
+    });
+
+    const progressPercent = ((rodada)/situacoes.length)*100;
+    document.getElementById('progress').style.width = progressPercent + '%';
+}
+
+function proximaPergunta(op) {
+    resp += op.r;
+    impacto += op.i;
+    rodada++;
+    mostrarSituacao();
+}
+
+function mostrarResultado() {
+    const container = document.getElementById('game');
+    container.innerHTML = `<h1>Fim de Jogo</h1>
+    <p>Pontos Ganhos: ${resp}</p>
+    <p>Pontos Perdidos (Impacto Negativo): ${impacto}</p>
+    <h2>${resp >= 40 ? 'Parabéns! Você venceu!' : 'Você precisa melhorar suas escolhas!'}</h2>
+    <button onclick="location.reload()">Jogar Novamente</button>`;
+    document.getElementById('progress').style.width = '100%';
+}
+
+mostrarSituacao();
+</script>
+</body>
+</html>
+
